@@ -22,5 +22,8 @@ export default function Home() {
         className='hidden md:inline-flex h-32 md:h-64 lg:h-full'
       />
     </div>
+
+    {/** POSTS */}
+    
   </div>);
 }
