@@ -1,12 +1,15 @@
+import { TypedObject } from "sanity";
+
 export interface Post {
     _id: string;
     _createdAt: string;
     title: string;
     author: Author;
     description: string;
-    mainImage: ImageModel;
+    mainImage: ImageItem;
     slug: Slug;
-    body: BlockItem[] | ImageItem[]
+    // body: BlockItem[] | ImageItem[]
+    body: TypedObject[]
 }
 
 
@@ -15,11 +18,11 @@ export interface Author {
     image: string;
 }
 
-interface ImageModel {
-    asset: {
-        url: string;
-    }
-}
+// interface ImageModel {
+//     asset: {
+//         url: string;
+//     }
+// }
 
 interface Slug {
     current: string;
@@ -39,10 +42,15 @@ interface BlockItem {
 }
 
 interface ImageItem {
-    _key: string;
+    _key?: string;
     _type: string;
     asset: {
         _ref: string;
         _type: string;
     };
+}
+
+
+export interface PostWithComments extends Post {
+    comments: {}[]
 }
