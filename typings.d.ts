@@ -50,7 +50,29 @@ interface ImageItem {
     };
 }
 
+export interface CommentFromSanity {
+    approved: boolean;
+    comment: string;
+    email: string;
+    name: string;
+    post : {
+        _ref: string;
+        _type: string;
+    },
+    _createdAt: string;
+    _id: string;
+    _rev: string;
+    _type: string;
+    _updatedAt: string;
+}
 
 export interface PostWithComments extends Post {
-    comments: {}[]
+    comments: CommentFromSanity[]
+}
+
+export interface IFormInput {
+    _id: string;
+    name: string;
+    email: string;
+    comment: string;
 }

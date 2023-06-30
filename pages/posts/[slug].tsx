@@ -1,11 +1,12 @@
 import Header from "@/components/header";
 import { sanityClient, urlFor } from "@/sanity";
-import { Post, PostWithComments } from "@/typings";
+import { IFormInput, Post, PostWithComments } from "@/typings";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { ParsedUrlQuery } from "querystring";
 import { useEffect, useState } from "react";
 import { PortableText } from "@portabletext/react";
 import ReactPortableText from "react-portable-text";
+import { SubmitHandler, useForm } from "react-hook-form";
 
 interface Props {
   post: PostWithComments;
@@ -13,6 +14,22 @@ interface Props {
 
 export default function Post({ post }: Props) {
   const [postCreationTime, setPostCreationTime] = useState("");
+  const [commentSubmitted, setCommentSubmitted] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IFormInput>();
+
+  const onSubmit: SubmitHandler<IFormInput> =async (data) => {
+    fetch('/api/createComment', {
+      method: "POST",
+      body: JSON.stringify(data)
+    }).then(() => {
+      console.log(data);
+    }).catch(console.log);
+  }
+
   useEffect(() => {
     setPostCreationTime(new Date(post._createdAt).toLocaleString());
   }, [post._createdAt]);
@@ -63,33 +80,92 @@ export default function Post({ post }: Props) {
                   {children}
                 </a>
               ),
-              blockquote: ({children}: any) => (<blockquote className="p-4 my-4 border-l-4 border-gray-300">
-              <p className="text-xl italic font-medium leading-relaxed text-gray-900">{children}</p>
-          </blockquote>)
+              blockquote: ({ children }: any) => (
+                <blockquote className="p-4 my-4 border-l-4 border-gray-300">
+                  <p className="text-xl italic font-medium leading-relaxed text-gray-900">
+                    {children}
+                  </p>
+                </blockquote>
+              ),
             }}
           />
         </div>
       </article>
 
       <hr className="max-w-lg my-5 mx-auto border border-yellow-500" />
-
-      <form className="flex flex-col p-5 max-w-2xl mx-auto mb-10">
+      {
+        commentSubmitted ? (<>
+          <div className="flex flex-col py-10 my-10 bg-yellow-500 text-white max-w-2xl mx-auto">
+            <h3 className="text-3xl font-bold">
+              Thank you for submitting your comment!
+            </h3>
+            <p>
+              Once it has been approved, it will appear below
+            </p>
+          </div>
+        </>) : (<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col p-5 max-w-2xl mx-auto mb-10">
         <h3 className="text-sm text-yellow-500">Enjoyed this article</h3>
         <h4 className="text-3xl font-bold">Leave a comment below!</h4>
-        <hr className="py-3 mt-2"/>
+        <hr className="py-3 mt-2" />
+        <input {...register("_id")} type="hidden" name="_id" value={post._id} />
         <label className="block mb-5">
           <span className="text-gray-700">Name</span>
-          <input className="shadow border rounded py-2 px-3 form-input mt-1 block w-full ring-yellow-500" type="text" placeholder="John Appleseed"/>
+          <input
+            {...register("name", { required: true })}
+            className="shadow border rounded py-2 px-3 form-input mt-1 block w-full ring-yellow-500"
+            type="text"
+            placeholder="John Appleseed"
+          />
         </label>
         <label className="block mb-5">
           <span className="text-gray-700">Email</span>
-          <input className="shadow border rounded py-2 px-3 form-input mt-1 block w-full ring-yellow-500" type="text"  placeholder="John Appleseed"/>
+          <input
+            {...register("email", { required: true })}
+            className="shadow border rounded py-2 px-3 form-input mt-1 block w-full ring-yellow-500"
+            type="email"
+            placeholder="John Appleseed"
+          />
         </label>
         <label className="block mb-5">
           <span className="text-gray-700">Comment</span>
-          <textarea className="shadow border rounded py-2 px-3 form-textarea mt-1 block w-full ring-yellow-500 outline-none focus:ring" placeholder="John Appleseed" rows={8}/>
+          <textarea
+            {...register("comment", { required: true })}
+            className="shadow border rounded py-2 px-3 form-textarea mt-1 block w-full ring-yellow-500 outline-none focus:ring"
+            placeholder="John Appleseed"
+            rows={8}
+          />
         </label>
-      </form>
+
+        {/** VALIDATION ERRORS */}
+        <div className="flex flex-col p-5">
+          {errors.name && <span className="text-red-500">- The Name field is required</span>}
+          {errors.email && <span className="text-red-500">- The Email field is required</span>}
+          {errors.comment && <span className="text-red-500">- The Comment field is required</span>}
+        </div>
+
+        <button 
+          type="submit" 
+          className="shadow bg-yellow-500 hover:bg-yellow-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded"
+        >
+          Submit
+        </button>
+      </form>)
+      }
+
+      {/**COMMENTS */}
+      <div className="flex flex-col p-10 my-10 max-w-2xl mx-auto shadow shadow-yellow-500 space-y-2">
+        <h3 className="text-4xl">Comments</h3>
+        <hr className="pb-2"/>
+
+        {post.comments.map(cmnt => {
+          return <div key={cmnt._id}>
+            <p>
+              <span className="text-yellow-500">{cmnt.name}:</span> {cmnt.comment}
+            </p>
+          </div>;
+        })}
+      </div>
+      
     </main>
   );
 }
